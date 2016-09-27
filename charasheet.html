@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>キャラシート</title>
+
+<script type="text/javascript">
+<!--
+
+  function getRankFromValue(value) {
+
+         if                  (value <=   99) { return 'I'; }
+    else if ( 100 <= value && value <=  199) { return 'H'; }
+    else if ( 200 <= value && value <=  299) { return 'G'; }
+    else if ( 300 <= value && value <=  399) { return 'F'; }
+    else if ( 400 <= value && value <=  499) { return 'E'; }
+    else if ( 500 <= value && value <=  599) { return 'D'; }
+    else if ( 600 <= value && value <=  699) { return 'C'; }
+    else if ( 700 <= value && value <=  799) { return 'B'; }
+    else if ( 800 <= value && value <=  899) { return 'A'; }
+    else if ( 900 <= value && value <=  999) { return 'S'; }
+    else if (1000 <= value && value <= 1099) { return 'SS'; }
+    else if (1100 <= value)                  { return 'SSS'; }
+
+    return '-';
+
+  }
+
+  function getHoseiFromValue(value) {
+
+         if                  (value <=   99) { return 0; }
+    else if ( 100 <= value && value <=  499) { return 1; }
+    else if ( 500 <= value && value <=  899) { return 2; }
+    else if ( 900 <= value)                  { return 3; }
+
+    return 0;
+
+  }
+
+  function getDiceFromValue(value) {
+
+         if                  (value <=  199) { return 1; }
+    else if ( 200 <= value && value <=  399) { return 2; }
+    else if ( 400 <= value && value <=  599) { return 3; }
+    else if ( 600 <= value && value <=  799) { return 4; }
+    else if ( 800 <= value && value <=  999) { return 5; }
+    else if (1000 <= value && value <= 1199) { return 6; }
+    else if (1200 <= value)                  { return 7; }
+
+    return 0;
+
+  }
+
+  function getHPMPInfo() {
+
+    var hpmp = new Array();
+    hpmp['HP'] = '筋力値/5+耐久値/2';
+    hpmp['MP'] = '魔力値';
+    return hpmp;
+
+  }
+
+  function getOtherInfo() {
+
+    var other = new Array();
+    other['命中'] = '器用D6+敏捷補正';
+    other['回避'] = '敏捷D6+器用補正';
+    other['受流'] = '器用D6+筋力補正';
+    other['防御'] = '耐久補正+器用補正';
+    other['行動速度'] = '敏捷補正';
+    return other;
+
+  }
+
+  function getParamFromValue(value) {
+
+    var param = [
+      value
+    , getRankFromValue(value)
+    , getHoseiFromValue(value)
+    , getDiceFromValue(value) + 'D6'
+    ]
+    return param;
+
+  }
+
+  function getHPMPFromStatus(status) {
+
+    var hpmp = new Array();
+    hpmp['HP'] = Math.ceil(status['筋力'] / 5) + Math.ceil(status['耐久'] / 2);
+    hpmp['MP'] = Math.ceil(status['魔力']);
+    return hpmp;
+
+  }
+
+  function getOtherFromStatus(status) {
+
+    var other = new Array();
+    other['命中'] = getDiceFromValue(status['器用']) + 'D6+' + getHoseiFromValue(status['敏捷']);
+    other['回避'] = getDiceFromValue(status['敏捷']) + 'D6+' + getHoseiFromValue(status['器用']);
+    other['受流'] = getDiceFromValue(status['器用']) + 'D6+' + getHoseiFromValue(status['筋力']);
+    other['防御'] = getHoseiFromValue(status['耐久']) + getHoseiFromValue(status['敏捷']);
+    other['行動速度'] = getHoseiFromValue(status['敏捷']);
+    return other;
+
+  }
+
+  function getAbilityFromAbility(ability) {
+
+    ability['発展'] = (ability['発展'] == true ? '◎' : '');
+    ability['ランク'] = getRankFromValue(ability['値']);
+    ability['補正'] = getHoseiFromValue(ability['値']);
+    return ability;
+
+  }
+
+  function getWeaponFromStatus(status, other, abilityList, weapon) {
+
+    for (var i in status) {
+      weapon['威力'] = weapon['威力'].split(i + 'D').join(getDiceFromValue(status[i]) + 'D');
+      weapon['威力'] = weapon['威力'].split(i + '補正').join(getHoseiFromValue(status[i]));
+      weapon['命中'] = weapon['命中'].split(i + 'D').join(getDiceFromValue(status[i]) + 'D');
+      weapon['命中'] = weapon['命中'].split(i + '補正').join(getHoseiFromValue(status[i]));
+    }
+    for (var i in other) {
+      weapon['威力'] = weapon['威力'].split('基礎' + i).join(other[i]);
+      weapon['命中'] = weapon['命中'].split('基礎' + i).join(other[i]);
+    }
+    var mastery = false;
+    for (var i in abilityList) {
+      if (abilityList[i]['アビリティ名'] == weapon['マスタリー']) {
+        weapon['マスタリー'] = abilityList[i]['補正'] + '（' + weapon['マスタリー'] + '）';
+        if (abilityList[i]['補正'] > 0) {
+          weapon['マスタリー'] = '+' + weapon['マスタリー'];
+        }
+        mastery = true;
+        break;
+      }
+    }
+    if (! mastery) {
+      weapon['マスタリー'] = '0（' + weapon['マスタリー'] + '）';
+    }
+    return weapon;
+
+  }
+
+  function getMagicFromStatus(status, other, magic) {
+
+    for (var i in status) {
+      magic['威力'] = magic['威力'].split(i + 'D').join(getDiceFromValue(status[i]) + 'D');
+      magic['威力'] = magic['威力'].split(i + '補正').join(getHoseiFromValue(status[i]));
+    }
+    for (var i in other) {
+      magic['威力'] = magic['威力'].split('基礎' + i).join(other[i]);
+    }
+    return magic;
+
+  }
+
+  function getArmorFromStatus(status, other, armor) {
+
+    for (var i in status) {
+      armor['回避'] = armor['回避'].split(i + 'D').join(getDiceFromValue(status[i]) + 'D');
+      armor['回避'] = armor['回避'].split(i + '補正').join(getHoseiFromValue(status[i]));
+      armor['受流'] = armor['受流'].split(i + 'D').join(getDiceFromValue(status[i]) + 'D');
+      armor['受流'] = armor['受流'].split(i + '補正').join(getHoseiFromValue(status[i]));
+      armor['防御'] = armor['防御'].split(i + 'D').join(getDiceFromValue(status[i]) + 'D');
+      armor['防御'] = armor['防御'].split(i + '補正').join(getHoseiFromValue(status[i]));
+    }
+    for (var i in other) {
+      armor['回避'] = armor['回避'].split('基礎' + i).join(other[i]);
+      armor['受流'] = armor['受流'].split('基礎' + i).join(other[i]);
+      armor['防御'] = armor['防御'].split('基礎' + i).join(other[i]);
+    }
+    return armor;
+
+  }
+
+  onload = function () {
+
+    var colorName   = ['背景カラー', '文字カラー'];
+    var basic0Name  = ['名前', '二つ名', 'スレタイ'];
+    var basic1Name  = ['年齢', '性別'];
+    var levelName   = ['レベル'];
+    var statusName  = ['筋力', '耐久', '器用', '敏捷', '魔力'];
+    var paramName   = ['値', 'ランク', '補正', 'ダイス'];
+    var hpmpName    = ['HP', 'MP'];
+    var otherName   = ['命中', '回避', '受流', '防御', '行動速度'];
+    var abilityName = ['アビリティ', 'アビリティ名', '発展', '値', 'ランク', '補正', '参照', '特殊'];
+    var weaponName  = ['武器', '武器名', '重量', '属性', '威力', '命中', '貫通', '耐久', 'マスタリー', '特殊'];
+    var skillName   = ['スキル', 'スキル名', '説明'];
+    var magicName   = ['魔法', '魔法名', '消費MP', '威力', '詠唱時間', '特殊'];
+    var armorName   = ['防具', '防具名', '重量', '回避', '受流', '防御', '特殊'];
+    var memoName    = ['余EXP', '所持品', 'メモ'];
+    var PTMemoName  = ['PT資産', 'PT所持品', 'PTメモ'];
+
+    var argv = getParameterValues('number');
+    var argvLength = argv.length;
+
+    var getPTData = (function (getNumber, getData, showData, PTData, numberList) {
+
+      PTData = null;
+
+      var xmlhttp = createXMLHttpRequest();
+      xmlhttp.open("GET", 'charasheet/_pt.txt', true);
+
+      xmlhttp.onreadystatechange = function () {
+        if (xmlhttp.readyState == 4) {
+
+          if (xmlhttp.status == 200 || xmlhttp.status == 0) {
+
+            PTData = JSON.parse(xmlhttp.responseText);
+
+          }
+
+          getNumber(getData, showData, PTData, numberList);
+
+        }
+      }
+
+      xmlhttp.send(null);
+
+    });
+
+    var getNumber = (function (getData, showData, PTData, numberList) {
+
+      numberList = new Array();
+
+      if (argvLength == 0) {
+
+        var xmlhttp = createXMLHttpRequest();
+        xmlhttp.open("GET", 'charasheet/_list.txt', true);
+
+        xmlhttp.onreadystatechange = function () {
+          if (xmlhttp.readyState == 4) {
+            if (xmlhttp.status == 200 || xmlhttp.status == 0) {
+
+              var list = JSON.parse(xmlhttp.responseText);
+
+              for (var l in list) {
+                numberList.push(list[l]['番号']);
+              }
+
+              getData(showData, PTData, numberList, 0);
+
+            }
+          }
+        }
+
+        xmlhttp.send(null);
+
+      } else {
+
+        numberList.push(argv[0]);
+
+        getData(showData, PTData, numberList, 0);
+
+      }
+
+    });
+
+    var getData = (function (showData, PTData, numberList, l) {
+
+      var number = numberList[l];
+
+      var xmlhttp = createXMLHttpRequest();
+      xmlhttp.open("GET", 'charasheet/' + number + '.txt', true);
+
+      xmlhttp.onreadystatechange = function () {
+        if (xmlhttp.readyState == 4) {
+          if (xmlhttp.status == 200 || xmlhttp.status == 0) {
+
+            var data = JSON.parse(xmlhttp.responseText);
+
+            setTimeout(showData(number, data, PTData), 0);
+
+            if (l + 1 < numberList.length) {
+              getData(showData, PTData, numberList, l + 1);
+            }
+
+          }
+        }
+      }
+
+      xmlhttp.send(null);
+
+    });
+
+    var showData = (function (number, data, PTData) {
+
+      if (argvLength > 0) {
+        document.title = data['名前'];
+      }
+
+      var body = document.getElementsByTagName('body').item(0);
+
+      var div = document.createElement('div');
+      div.id = 'chara_' + number;
+      div.style.width = '72em';
+      div.style.overflow = 'hidden';
+      body.appendChild(div);
+
+      var table = document.createElement('table');
+      table.id = 'basic0_' + number;
+      table.style.width = '45em';
+      table.style.clear = 'both';
+      table.style.cssFloat = 'left';
+      div.appendChild(table);
+
+      var row = table.insertRow(-1);
+      var cell = document.createElement('th');
+      cell.style.backgroundColor = data['背景カラー'];
+      cell.style.color = data['文字カラー'];
+      cell.innerText = '名前';
+      row.appendChild(cell);
+      var row = table.insertRow(-1);
+      var cell = row.insertCell(-1);
+      if (data['二つ名'] != null && data['二つ名'].length != 0) {
+        data['名前'] = data['二つ名'] + data['名前'];
+      }
+      if (data['スレタイ'] != null && data['スレタイ'].length != 0) {
+        data['名前'] = data['名前'] + data['スレタイ'];
+      }
+      cell.innerText = data['名前'];
+
+      var table = document.createElement('table');
+      table.id = 'basic1_' + number;
+      table.style.width = '10em';
+      table.style.cssFloat = 'left';
+      div.appendChild(table);
+
+      var row = table.insertRow(-1);
+      for (var j in basic1Name) {
+        var cell = document.createElement('th');
+        cell.style.backgroundColor = data['背景カラー'];
+        cell.style.color = data['文字カラー'];
+        cell.style.width = '5em';
+        cell.innerText = basic1Name[j];
+        row.appendChild(cell);
+      }
+      var row = table.insertRow(-1);
+      for (var j in basic1Name) {
+        var cell = row.insertCell(-1);
+        cell.style.width = '5em';
+        cell.innerText = data[basic1Name[j]];
+      }
+
+      var link = document.createElement('div');
+      link.id = 'link_' + number;
+      link.style.border = 'none';
+      if (argvLength == 0) {
+        link.innerHTML =
+           '<a id="hidden_' + number + '" href="javascript:hidden(\'' + number + '\');">[非表示]</a>'
+        + ' <a href="javascript:print(\'' + number + '\');">[個別表示]</a>'
+        + ' <a href="charasheet/' + number + '.txt" target="_blank">[データ]</a>';
+      }
+      div.appendChild(link);
+
+      var status = new Array();
+
+      for (var i in statusName) {
+        status[statusName[i]] = data[statusName[i]];
+      }
+
+      var table = document.createElement('table');
+      table.id = 'status_' + number;
+      table.style.width = '40em';
+      table.style.clear = 'both';
+      table.style.cssFloat = 'left';
+      div.appendChild(table);
+
+      var row = table.insertRow(-1);
+      var cell = document.createElement('th');
+      cell.style.backgroundColor = data['背景カラー'];
+      cell.style.color = data['文字カラー'];
+      row.appendChild(cell);
+      for (var j in paramName) {
+        var cell = document.createElement('th');
+        cell.style.backgroundColor = data['背景カラー'];
+        cell.style.color = data['文字カラー'];
+        cell.innerText = paramName[j];
+        row.appendChild(cell);
+      }
+      for (var i in status) {
+        var row = table.insertRow(-1);
+        var param = getParamFromValue(status[i]);
+        var cell = document.createElement('th');
+        cell.style.backgroundColor = data['背景カラー'];
+        cell.style.color = data['文字カラー'];
+        cell.innerText = i;
+        row.appendChild(cell);
+        for (var j in param) {
+          var cell = row.insertCell(-1);
+          cell.innerText = param[j];
+        }
+      }
+
+      var table = document.createElement('table');
+      table.id = 'level_' + number;
+      table.style.width = '20em';
+      table.style.cssFloat = 'left';
+      div.appendChild(table);
+
+      for (var j in levelName) {
+        var row = table.insertRow(-1);
+        var cell = document.createElement('th');
+        cell.style.backgroundColor = data['背景カラー'];
+        cell.style.color = data['文字カラー'];
+        cell.style.width = '40%';
+        cell.innerText = levelName[j];
+        row.appendChild(cell);
+        var cell = row.insertCell(-1);
+        cell.innerText = data[levelName[j]];
+      }
+
+      var hpmp = getHPMPFromStatus(status);
+      // var hpmp = getHPMPInfo();
+
+      var table = document.createElement('table');
+      table.id = 'hpmp_' + number;
+      table.style.width = '20em';
+      table.style.cssFloat = 'left';
+      div.appendChild(table);
+
+      for (var j in hpmpName) {
+        var row = table.insertRow(-1);
+        var cell = document.createElement('th');
+        cell.style.backgroundColor = data['背景カラー'];
+        cell.style.color = data['文字カラー'];
+        cell.style.width = '40%';
+        cell.innerText = hpmpName[j];
+        row.appendChild(cell);
+        var cell = row.insertCell(-1);
+        cell.innerText = hpmp[hpmpName[j]];
+      }
+
+      var other = getOtherFromStatus(status);
+      // var other = getOtherInfo();
+
+      var table = document.createElement('table');
+      table.id = 'other_' + number;
+      table.style.width = '20em';
+      table.style.cssFloat = 'left';
+      div.appendChild(table);
+
+      for (var j in otherName) {
+        var row = table.insertRow(-1);
+        var cell = document.createElement('th');
+        cell.style.backgroundColor = data['背景カラー'];
+        cell.style.color = data['文字カラー'];
+        cell.style.width = '40%';
+        cell.innerText = otherName[j];
+        row.appendChild(cell);
+        var cell = row.insertCell(-1);
+        cell.innerText = other[otherName[j]];
+      }
+
+      var table = document.createElement('table');
+      table.id = 'ability_' + number;
+      table.style.width = '71em';
+      table.style.clear = 'both';
+      table.style.cssFloat = 'left';
+      div.appendChild(table);
+
+      var row = table.insertRow(-1);
+      for (var j in abilityName) {
+        if (abilityName[j] == abilityName[0]) { continue; }
+        var cell = document.createElement('th');
+        cell.style.backgroundColor = data['背景カラー'];
+        cell.style.color = data['文字カラー'];
+        if (abilityName[j] == abilityName[1]) {
+          cell.style.width = '15em';
+        } else if (abilityName[j] == '特殊') {
+          cell.style.width = '10em';
+        }
+        cell.innerText = abilityName[j];
+        row.appendChild(cell);
+      }
+
+      var abilityList = new Array();
+
+      for (var i in data[abilityName[0]]) {
+
+        var ability = new Array();
+
+        for (var j in abilityName) {
+          if (abilityName[j] == abilityName[0]) { continue; }
+          ability[abilityName[j]] = data[abilityName[0]][i][abilityName[j]];
+        }
+
+        ability = getAbilityFromAbility(ability);
+        abilityList.push(ability);
+
+        var row = table.insertRow(-1);
+        for (var j in ability) {
+          var cell = row.insertCell(-1);
+          if (j == '特殊') {
+            cell.style.textAlign = 'left';
+          }
+          cell.innerText = ability[j];
+        }
+
+      }
+
+      var table = document.createElement('table');
+      table.id = 'weapon_' + number;
+      table.style.width = '71em';
+      table.style.clear = 'both';
+      table.style.cssFloat = 'left';
+      div.appendChild(table);
+
+      var row = table.insertRow(-1);
+      for (var j in weaponName) {
+        if (weaponName[j] == weaponName[0]) { continue; }
+        var cell = document.createElement('th');
+        cell.style.backgroundColor = data['背景カラー'];
+        cell.style.color = data['文字カラー'];
+        if (weaponName[j] == weaponName[1]) {
+          cell.style.width = '15em';
+        } else if (weaponName[j] == '特殊') {
+          cell.style.width = '10em';
+        }
+        cell.innerText = weaponName[j];
+        row.appendChild(cell);
+      }
+
+      var weaponList = new Array();
+
+      for (var i in data[weaponName[0]]) {
+
+        var weapon = new Array();
+
+        for (var j in weaponName) {
+          if (weaponName[j] == weaponName[0]) { continue; }
+          weapon[weaponName[j]] = data[weaponName[0]][i][weaponName[j]];
+        }
+
+        weapon = getWeaponFromStatus(status, other, abilityList, weapon);
+        weaponList.push(weapon);
+
+        var row = table.insertRow(-1);
+        for (var j in weapon) {
+          var cell = row.insertCell(-1);
+          if (j == '特殊') {
+            cell.style.textAlign = 'left';
+          }
+          cell.innerText = weapon[j];
+        }
+
+      }
+
+      var table = document.createElement('table');
+      table.id = 'magic_' + number;
+      table.style.width = '71em';
+      table.style.clear = 'both';
+      table.style.cssFloat = 'left';
+      div.appendChild(table);
+
+      var row = table.insertRow(-1);
+      for (var j in magicName) {
+        if (magicName[j] == magicName[0]) { continue; }
+        var cell = document.createElement('th');
+        cell.style.backgroundColor = data['背景カラー'];
+        cell.style.color = data['文字カラー'];
+        if (magicName[j] == magicName[1]) {
+          cell.style.width = '15em';
+        } else if (magicName[j] == '特殊') {
+          cell.style.width = '10em';
+        }
+        cell.innerText = magicName[j];
+        row.appendChild(cell);
+      }
+
+      var magicList = new Array();
+
+      for (var i in data[magicName[0]]) {
+
+        var magic = new Array();
+
+        for (var j in magicName) {
+          if (magicName[j] == magicName[0]) { continue; }
+          magic[magicName[j]] = data[magicName[0]][i][magicName[j]];
+        }
+
+        magic = getMagicFromStatus(status, other, magic);
+        magicList.push(magic);
+
+        var row = table.insertRow(-1);
+        for (var j in magic) {
+          var cell = row.insertCell(-1);
+          var magicLengthMax = 0;
+          var s = magic[j].split('\n');
+          var sLength = s.length;
+          for (var k = 0; k < sLength; k++) {
+            if (magicLengthMax < s[k].length) {
+              magicLengthMax = s[k].length;
+            }
+          }
+          if (j == '威力' && magicLengthMax >= 20) {
+            cell.style.textAlign = 'left';
+          } else if (j == '特殊') {
+            cell.style.textAlign = 'left';
+            if (magic[j].length > 50) {
+             cell.style.width = '20em';
+            }
+          }
+          cell.innerText = magic[j];
+        }
+
+      }
+
+      var table = document.createElement('table');
+      table.id = 'skill_' + number;
+      table.style.width = '71em';
+      table.style.clear = 'both';
+      table.style.cssFloat = 'left';
+      div.appendChild(table);
+
+      var row = table.insertRow(-1);
+      for (var j in skillName) {
+        if (skillName[j] == skillName[0]) { continue; }
+        var cell = document.createElement('th');
+        cell.style.backgroundColor = data['背景カラー'];
+        cell.style.color = data['文字カラー'];
+        if (skillName[j] == skillName[1]) {
+          cell.style.width = '15em';
+        }
+        cell.innerText = skillName[j];
+        row.appendChild(cell);
+      }
+
+      var skillList = new Array();
+
+      for (var i in data[skillName[0]]) {
+
+        var skill = new Array();
+
+        for (var j in skillName) {
+          if (skillName[j] == skillName[0]) { continue; }
+          skill[skillName[j]] = data[skillName[0]][i][skillName[j]];
+        }
+
+        skillList.push(skill);
+
+        var row = table.insertRow(-1);
+        for (var j in skill) {
+          var cell = row.insertCell(-1);
+          if (j == '説明') {
+            cell.style.textAlign = 'left';
+          }
+          cell.innerText = skill[j];
+        }
+
+      }
+
+      var table = document.createElement('table');
+      table.id = 'armor_' + number;
+      table.style.width = '71em';
+      table.style.clear = 'both';
+      table.style.cssFloat = 'left';
+      div.appendChild(table);
+
+      var row = table.insertRow(-1);
+      for (var j in armorName) {
+        if (armorName[j] == armorName[0]) { continue; }
+        var cell = document.createElement('th');
+        cell.style.backgroundColor = data['背景カラー'];
+        cell.style.color = data['文字カラー'];
+        if (armorName[j] == armorName[1]) {
+          cell.style.width = '15em';
+        } else if (armorName[j] == '特殊') {
+          cell.style.width = '10em';
+        }
+        cell.innerText = armorName[j];
+        row.appendChild(cell);
+      }
+
+      var armorList = new Array();
+
+      for (var i in data[armorName[0]]) {
+
+        var armor = new Array();
+
+        for (var j in armorName) {
+          if (armorName[j] == armorName[0]) { continue; }
+          armor[armorName[j]] = data[armorName[0]][i][armorName[j]];
+        }
+
+        armor = getArmorFromStatus(status, other, armor);
+        armorList.push(armor);
+
+        var row = table.insertRow(-1);
+        for (var j in armor) {
+          var cell = row.insertCell(-1);
+          if (j == '特殊') {
+            cell.style.textAlign = 'left';
+          }
+          cell.innerText = armor[j];
+        }
+
+      }
+
+      var table = document.createElement('table');
+      table.id = 'memo_' + number;
+      table.style.width = '28em';
+      table.style.clear = 'both';
+      table.style.cssFloat = 'left';
+      div.appendChild(table);
+
+      var row = table.insertRow(-1);
+      var cell = row.insertCell(-1);
+      cell.style.padding = '1em';
+      cell.style.textAlign = 'left';
+      var memo = '';
+      for (var i in memoName) {
+        if (memo.length > 0) { memo += '\n\n'; }
+        memo += '【' + memoName[i] + '】';
+        if (data[memoName[i]] instanceof Array) {
+          for (var j in data[memoName[i]]) {
+            if (data[memoName[i]][j].length > 0) {
+              memo += '\n' + '　' + data[memoName[i]][j];
+            }
+          }
+        } else {
+          memo += data[memoName[i]];
+        }
+      }
+      cell.innerText = memo;
+
+      var table = document.createElement('table');
+      table.id = 'pt_' + number;
+      table.style.width = '28em';
+      table.style.cssFloat = 'left';
+      div.appendChild(table);
+
+      var row = table.insertRow(-1);
+      var cell = row.insertCell(-1);
+      cell.style.padding = '1em';
+      cell.style.textAlign = 'left';
+      var PTMemo = '';
+      for (var i in PTMemoName) {
+        if (PTMemo.length > 0) { PTMemo += '\n\n'; }
+        PTMemo += '【' + PTMemoName[i] + '】';
+        if (PTData[PTMemoName[i]] instanceof Array) {
+          for (var j in PTData[PTMemoName[i]]) {
+            if (PTData[PTMemoName[i]][j].length > 0) {
+              PTMemo += '\n' + '　' + PTData[PTMemoName[i]][j];
+            }
+          }
+        } else {
+          PTMemo += PTData[PTMemoName[i]];
+        }
+      }
+      cell.innerText = PTMemo;
+
+      if (argvLength == 0) {
+        hidden(number);
+      }
+
+    });
+
+    getPTData(getNumber, getData, showData, null, new Array());
+
+  }
+
+  function hidden(number) {
+
+    var table = document.getElementById('status_' + number);
+
+    if (table.style.display == 'none') {
+
+      var rows = document.getElementById('basic0_' + number).rows;
+      rows[0].style.display = '';
+      var cells = rows[1].cells;
+      cells[0].style.backgroundColor = '';
+      cells[0].style.color = '';
+      var rows = document.getElementById('basic1_' + number).rows;
+      rows[0].style.display = '';
+      var table = document.getElementById('status_' + number);
+      table.style.display = '';
+      var table = document.getElementById('level_' + number);
+      table.style.display = '';
+      var table = document.getElementById('hpmp_' + number);
+      table.style.display = '';
+      var table = document.getElementById('other_' + number);
+      table.style.display = '';
+      var table = document.getElementById('ability_' + number);
+      table.style.display = '';
+      var table = document.getElementById('weapon_' + number);
+      table.style.display = '';
+      var table = document.getElementById('skill_' + number);
+      table.style.display = '';
+      var table = document.getElementById('magic_' + number);
+      table.style.display = '';
+      var table = document.getElementById('armor_' + number);
+      table.style.display = '';
+      var table = document.getElementById('memo_' + number);
+      table.style.display = '';
+      var table = document.getElementById('pt_' + number);
+      table.style.display = '';
+      var a = document.getElementById('hidden_' + number);
+      a.innerText = '[非表示]';
+
+    } else {
+
+      var rows = document.getElementById('basic0_' + number).rows;
+      rows[0].style.display = 'none';
+      var cells = rows[0].cells;
+      var style = cells[0].currentStyle || document.defaultView.getComputedStyle(cells[0], '');
+      var cells = rows[1].cells;
+      cells[0].style.backgroundColor = style.backgroundColor;
+      cells[0].style.color = style.color;
+      var rows = document.getElementById('basic1_' + number).rows;
+      rows[0].style.display = 'none';
+      var table = document.getElementById('status_' + number);
+      table.style.display = 'none';
+      var table = document.getElementById('level_' + number);
+      table.style.display = 'none';
+      var table = document.getElementById('hpmp_' + number);
+      table.style.display = 'none';
+      var table = document.getElementById('other_' + number);
+      table.style.display = 'none';
+      var table = document.getElementById('ability_' + number);
+      table.style.display = 'none';
+      var table = document.getElementById('weapon_' + number);
+      table.style.display = 'none';
+      var table = document.getElementById('skill_' + number);
+      table.style.display = 'none';
+      var table = document.getElementById('magic_' + number);
+      table.style.display = 'none';
+      var table = document.getElementById('armor_' + number);
+      table.style.display = 'none';
+      var table = document.getElementById('memo_' + number);
+      table.style.display = 'none';
+      var table = document.getElementById('pt_' + number);
+      table.style.display = 'none';
+      var a = document.getElementById('hidden_' + number);
+      a.innerText = '[表示]';
+
+    }
+
+  }
+
+  function print(number) {
+    open().location.href = location.href.replace(/\?.*$/, '') + '?number=' + number;
+  }
+
+  function printAll(numberList) {
+  }
+
+  function getParameterValues(key) {
+    var _vars = new Array();
+    var _hashes = location.href.slice(location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < _hashes.length; i++) {
+      var _hash = _hashes[i].split('=');
+      if (_hash[0] == key) {
+        _vars.push(_hash[1]);
+      }
+    }
+    return _vars;
+  }
+
+  function createXMLHttpRequest() {
+
+    var ie = false;
+    try {
+      new XDomainRequest();
+      ie = true;
+    } catch (ee) {
+      try {
+        new ActiveXObject('Microsoft.XMLHTTP');
+        ie = true;
+      } catch (e) {}
+    }
+
+    if (ie) {
+      try  { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); } catch (e) {}
+      try  { return new ActiveXObject("Msxml2.XMLHTTP.3.0"); } catch (e) {}
+      try  { return new ActiveXObject("Microsoft.XMLHTTP");  } catch (e) {}
+    } else { return new XMLHttpRequest(); }
+
+    return false;
+
+  }
+
+// -->
+</script>
+
+<style type="text/css">
+<!--
+
+  div { margin:0.5em; border:3px double; text-align:center; }
+  table { margin:0.5em; border-collapse:collapse; }
+  table,tr,th,td { border:1px solid; text-align:center; }
+  th { white-space:nowrap; }
+  th,td { padding-left:0.5em; padding-right:0.5em; }
+  th,td { background-color:white; color:black; }
+  a { background-color:lightgray; }
+  ::-ms-clear { display:none; }
+
+-->
+</style>
+
+</head>
+<body>
+</body>
+</html>
