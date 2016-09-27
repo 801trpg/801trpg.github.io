@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>能力値計算</title>
+
+<script type="text/javascript">
+<!--
+
+  function getRankFromValue(value) {
+
+         if                  (value <=   99) { return 'I'; }
+    else if ( 100 <= value && value <=  199) { return 'H'; }
+    else if ( 200 <= value && value <=  299) { return 'G'; }
+    else if ( 300 <= value && value <=  399) { return 'F'; }
+    else if ( 400 <= value && value <=  499) { return 'E'; }
+    else if ( 500 <= value && value <=  599) { return 'D'; }
+    else if ( 600 <= value && value <=  699) { return 'C'; }
+    else if ( 700 <= value && value <=  799) { return 'B'; }
+    else if ( 800 <= value && value <=  899) { return 'A'; }
+    else if ( 900 <= value && value <=  999) { return 'S'; }
+    else if (1000 <= value && value <= 1099) { return 'SS'; }
+    else if (1100 <= value)                  { return 'SSS'; }
+
+    return false;
+
+  }
+
+  function getHoseiFromValue(value) {
+
+         if                  (value <=   99) { return 0; }
+    else if ( 100 <= value && value <=  499) { return 1; }
+    else if ( 500 <= value && value <=  899) { return 2; }
+    else if ( 900 <= value)                  { return 3; }
+
+    return false;
+
+  }
+
+  function getDiceFromValue(value) {
+
+         if                  (value <=  199) { return 1; }
+    else if ( 200 <= value && value <=  399) { return 2; }
+    else if ( 400 <= value && value <=  599) { return 3; }
+    else if ( 600 <= value && value <=  799) { return 4; }
+    else if ( 800 <= value && value <=  999) { return 5; }
+    else if (1000 <= value)                  { return 6; }
+
+    return false;
+
+  }
+
+  function getParamFromValue(value) {
+
+    var param = [
+      value
+    , getRankFromValue(value)
+    , getHoseiFromValue(value)
+    , getDiceFromValue(value) + 'D6'
+    ]
+    return param;
+
+  }
+
+  function getHPMPFromStatus(status) {
+
+    var hpmp = [
+      Math.ceil(status[0] / 5) + Math.ceil(status[1] / 2)
+    , Math.ceil(status[4])
+    ]
+    return hpmp;
+
+  }
+
+  function getOtherFromStatus(status) {
+
+    var other = [
+      getDiceFromValue(status[2]) + 'D6+' + getHoseiFromValue(status[3])
+    , getDiceFromValue(status[3]) + 'D6+' + getHoseiFromValue(status[2])
+    , getDiceFromValue(status[2]) + 'D6+' + getHoseiFromValue(status[0])
+    , getHoseiFromValue(status[1]) + getHoseiFromValue(status[3])
+    , getHoseiFromValue(status[3])
+    ]
+    return other;
+
+  }
+
+  function init() {
+
+    var statusName = ['筋力', '耐久', '器用', '敏捷', '魔力'];
+    var paramName  = ['値', 'ランク', '補正', 'ダイス'];
+    var hpmpName   = ['HP', 'MP'];
+    var otherName  = ['命中', '回避', '受流', '防御', '行動速度'];
+
+    var argv = getParameterValues('status');
+    var status = new Array();
+
+    var statusNameLength = statusName.length;
+    for (var i = 0; i < statusNameLength; i++) {
+      if (parseInt(argv[i])) {
+        status[i] = parseInt(argv[i], 10);
+      } else {
+        status[i] = 0;
+      }
+    }
+
+    var table = document.getElementById('status');
+    var row = table.insertRow(-1);
+    var cell = row.insertCell(-1);
+    cell.outerHTML = '<th></th>';
+    var paramNameLength = paramName.length;
+    var cell = row.insertCell(-1);
+    cell.outerHTML = '<th>' + paramName[0] + ' <button onclick="calc();" tabindex="2">計算</button></th>';
+    for (var j = 1; j < paramNameLength; j++) {
+      var cell = row.insertCell(-1);
+      cell.outerHTML = '<th>' + paramName[j] + '</th>';
+    }
+    var statusLength = status.length;
+    for (var i = 0; i < statusLength; i++) {
+      var row = table.insertRow(-1);
+      var param = getParamFromValue(status[i]);
+      var paramLength = param.length;
+      var cell = row.insertCell(-1);
+      cell.outerHTML = '<th>' + statusName[i] + '</th>';
+      var cell = row.insertCell(-1);
+      cell.innerHTML = '<input type="text" name="status" size="10" tabindex="1" value="' + param[0] + '" />';
+      for (var j = 1; j < paramLength; j++) {
+        var cell = row.insertCell(-1);
+        cell.innerText = param[j];
+      }
+    }
+
+    var hpmp = getHPMPFromStatus(status);
+    var table = document.getElementById('hpmp');
+    var hpmpLength = hpmp.length;
+    for (var j = 0; j < hpmpLength; j++) {
+      var row = table.insertRow(-1);
+      var cell = row.insertCell(-1);
+      cell.outerHTML = '<th>' + hpmpName[j] + '</th>';
+      var cell = row.insertCell(-1);
+      cell.innerText = hpmp[j];
+    }
+
+    var other = getOtherFromStatus(status);
+    var table = document.getElementById('other');
+    var otherLength = other.length;
+    for (var j = 0; j < otherLength; j++) {
+      var row = table.insertRow(-1);
+      var cell = row.insertCell(-1);
+      cell.outerHTML = '<th>' + otherName[j] + '</th>';
+      var cell = row.insertCell(-1);
+      cell.innerText = other[j];
+    }
+
+    var a = document.getElementById('reset');
+    a.href = window.location.href.replace(/\?.*$/, '');
+    a.innerText = '初期化';
+
+    document.chara.status[0].focus();
+    document.chara.status[0].select();
+
+  }
+
+  function calc() {
+    window.location.href = window.location.href;
+  }
+
+  function getParameterValues(key) {
+    var _vars = new Array();
+    var _hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < _hashes.length; i++) {
+      var _hash = _hashes[i].split('=');
+      if (_hash[0] == key) {
+        _vars.push(_hash[1]);
+      }
+    }
+    return _vars;
+  }
+
+// -->
+</script>
+
+<style type="text/css">
+<!--
+
+  table { width:20em; margin:1em; border-collapse:collapse; }
+  table,tr,th,td { border:1px solid; text-align:center; }
+  input { text-align:center; }
+  ::-ms-clear { display:none; }
+
+-->
+</style>
+
+</head>
+<body onload="init();">
+
+  <form name="chara">
+
+  <table id="status"></table>
+  <table id="hpmp"></table>
+  <table id="other"></table>
+
+  <div><a id="reset"></a></div>
+
+  </form>
+
+</body>
+</html>
