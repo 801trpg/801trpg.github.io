@@ -127,19 +127,24 @@
       weapon['命中'] = weapon['命中'].split('基礎' + i).join(other[i]);
     }
     var mastery = false;
-    for (var i in abilityList) {
-      if (abilityList[i]['アビリティ名'] == weapon['マスタリー']) {
-        weapon['マスタリー'] = abilityList[i]['補正'] + '（' + weapon['マスタリー'] + '）';
-        if (abilityList[i]['補正'] > 0) {
-          weapon['マスタリー'] = '+' + weapon['マスタリー'];
+    var masteryData = '';
+    for (var j in weapon['マスタリー']) {
+      for (var i in abilityList) {
+        if (abilityList[i]['アビリティ名'] == weapon['マスタリー'][j]) {
+          weapon['マスタリー'][j] = abilityList[i]['補正'] + '（' + weapon['マスタリー'][j] + '）';
+          if (abilityList[i]['補正'] > 0) {
+            weapon['マスタリー'][j] = '+' + weapon['マスタリー'][j];
+          }
+          mastery = true;
+          break;
         }
-        mastery = true;
-        break;
       }
+      if (! mastery) {
+        weapon['マスタリー'][j] = '0（' + weapon['マスタリー'][j] + '）';
+      }
+      masteryData += weapon['マスタリー'][j] + '\n';
     }
-    if (! mastery) {
-      weapon['マスタリー'] = '0（' + weapon['マスタリー'] + '）';
-    }
+    weapon['マスタリー'] = masteryData;
     return weapon;
 
   }
