@@ -207,7 +207,7 @@
       PTData = null;
 
       var xmlhttp = createXMLHttpRequest();
-      xmlhttp.open("GET", 'charasheet/_pt.txt', true);
+      xmlhttp.open("GET", 'https://dl.dropboxusercontent.com/u/24171218/charasheet/_pt.txt', true);
 
       xmlhttp.onreadystatechange = function () {
         if (xmlhttp.readyState == 4) {
@@ -234,7 +234,7 @@
       if (argvLength == 0) {
 
         var xmlhttp = createXMLHttpRequest();
-        xmlhttp.open("GET", 'charasheet/_list.txt', true);
+        xmlhttp.open("GET", 'https://dl.dropboxusercontent.com/u/24171218/charasheet/_list.txt', true);
 
         xmlhttp.onreadystatechange = function () {
           if (xmlhttp.readyState == 4) {
@@ -269,7 +269,7 @@
       var number = numberList[l];
 
       var xmlhttp = createXMLHttpRequest();
-      xmlhttp.open("GET", 'charasheet/' + number + '.txt', true);
+      xmlhttp.open("GET", 'https://dl.dropboxusercontent.com/u/24171218/charasheet/' + number + '.txt', true);
 
       xmlhttp.onreadystatechange = function () {
         if (xmlhttp.readyState == 4) {
@@ -357,7 +357,7 @@
         link.innerHTML =
            '<a id="hidden_' + number + '" href="javascript:hidden(\'' + number + '\');">[非表示]</a>'
         + ' <a href="javascript:print(\'' + number + '\');">[個別表示]</a>'
-        + ' <a href="charasheet/' + number + '.txt" target="_blank">[データ]</a>';
+        + ' <a href="https://dl.dropboxusercontent.com/u/24171218/charasheet/' + number + '.txt" target="_blank">[データ]</a>';
       }
       div.appendChild(link);
 
