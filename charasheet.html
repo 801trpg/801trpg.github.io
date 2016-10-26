@@ -734,6 +734,16 @@
       }
       cell.innerText = memo;
 
+      if (argvLength == 0) {
+        var row = table.insertRow(-1);
+        row.style.border = 'none';
+        var cell = row.insertCell(-1);
+        cell.style.textAlign = 'right';
+        cell.style.border = 'none';
+        cell.innerHTML = '<a id="hidden_pt_' + number + '" href="javascript:hidden_pt(\'' + number +
+ '\');">[PT情報表示]</a>';
+      }
+
       var table = document.createElement('table');
       table.id = 'pt_' + number;
       table.style.width = '28em';
@@ -770,6 +780,21 @@
 
   }
 
+  function hidden_pt(number) {
+
+    var table = document.getElementById('pt_' + number);
+    var a = document.getElementById('hidden_pt_' + number);
+
+    if (table.style.display == 'none') {
+      table.style.display = '';
+      a.innerText = '[PT情報非表示]';
+    } else {
+      table.style.display = 'none';
+      a.innerText = '[PT情報表示]';
+    }
+
+  }
+
   function hidden(number) {
 
     var table = document.getElementById('status_' + number);
@@ -802,8 +827,6 @@
       var table = document.getElementById('armor_' + number);
       table.style.display = '';
       var table = document.getElementById('memo_' + number);
-      table.style.display = '';
-      var table = document.getElementById('pt_' + number);
       table.style.display = '';
       var a = document.getElementById('hidden_' + number);
       a.innerText = '[非表示]';
