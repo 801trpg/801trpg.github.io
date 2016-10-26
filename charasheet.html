@@ -199,6 +199,8 @@
     var memoName    = ['余EXP', '所持品', 'メモ'];
     var PTMemoName  = ['PT資産', 'PT所持品', 'PTメモ'];
 
+    var dir = 'https://dl.dropboxusercontent.com/u/24171218/charasheet/';
+
     var argv = getParameterValues('number');
     var argvLength = argv.length;
 
@@ -207,7 +209,7 @@
       PTData = null;
 
       var xmlhttp = createXMLHttpRequest();
-      xmlhttp.open("GET", 'https://dl.dropboxusercontent.com/u/24171218/charasheet/_pt.txt', true);
+      xmlhttp.open("GET", dir + '_pt.txt', true);
 
       xmlhttp.onreadystatechange = function () {
         if (xmlhttp.readyState == 4) {
@@ -234,7 +236,7 @@
       if (argvLength == 0) {
 
         var xmlhttp = createXMLHttpRequest();
-        xmlhttp.open("GET", 'https://dl.dropboxusercontent.com/u/24171218/charasheet/_list.txt', true);
+        xmlhttp.open("GET", dir + '_list.txt', true);
 
         xmlhttp.onreadystatechange = function () {
           if (xmlhttp.readyState == 4) {
@@ -269,7 +271,7 @@
       var number = numberList[l];
 
       var xmlhttp = createXMLHttpRequest();
-      xmlhttp.open("GET", 'https://dl.dropboxusercontent.com/u/24171218/charasheet/' + number + '.txt', true);
+      xmlhttp.open("GET", dir + number + '.txt', true);
 
       xmlhttp.onreadystatechange = function () {
         if (xmlhttp.readyState == 4) {
@@ -357,7 +359,7 @@
         link.innerHTML =
            '<a id="hidden_' + number + '" href="javascript:hidden(\'' + number + '\');">[非表示]</a>'
         + ' <a href="javascript:print(\'' + number + '\');">[個別表示]</a>'
-        + ' <a href="https://dl.dropboxusercontent.com/u/24171218/charasheet/' + number + '.txt" target="_blank">[データ]</a>';
+        + ' <a href="' + dir + number + '.txt" target="_blank">[データ]</a>';
       }
       div.appendChild(link);
 
