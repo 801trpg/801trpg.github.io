@@ -715,9 +715,11 @@
       div.appendChild(table);
 
       var row = table.insertRow(-1);
+      row.style.border = 'none';
       var cell = row.insertCell(-1);
       cell.style.padding = '1em';
       cell.style.textAlign = 'left';
+      cell.style.border = 'none';
       var memo = '';
       for (var i in memoName) {
         if (memo.length > 0) { memo += '\n\n'; }
@@ -751,9 +753,11 @@
       div.appendChild(table);
 
       var row = table.insertRow(-1);
+      row.style.border = 'none';
       var cell = row.insertCell(-1);
       cell.style.padding = '1em';
       cell.style.textAlign = 'left';
+      cell.style.border = 'none';
       var PTMemo = '';
       for (var i in PTMemoName) {
         if (PTMemo.length > 0) { PTMemo += '\n\n'; }
