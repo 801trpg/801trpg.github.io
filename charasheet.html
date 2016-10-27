@@ -895,26 +895,15 @@
   }
 
   function createXMLHttpRequest() {
-
-    var ie = false;
-    try {
-      new XDomainRequest();
-      ie = true;
-    } catch (ee) {
-      try {
-        new ActiveXObject('Microsoft.XMLHTTP');
-        ie = true;
-      } catch (e) {}
+    if (typeof XDomainRequest != "undefined"){ // IE8以降
+      return new XDomainRequest();
+    } else if (typeof XMLHttpRequest != "undefined"){ // FireFox他
+      return new XMLHttpRequest();
+    } else if (window.ActiveXObject) { // IE7以前
+      return new ActiveXObject("Microsoft.XMLHTTP");
+    } else { // 未対応ブラウザ
+      return;
     }
-
-    if (ie) {
-      try  { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); } catch (e) {}
-      try  { return new ActiveXObject("Msxml2.XMLHTTP.3.0"); } catch (e) {}
-      try  { return new ActiveXObject("Microsoft.XMLHTTP");  } catch (e) {}
-    } else { return new XMLHttpRequest(); }
-
-    return false;
-
   }
 
 // -->
